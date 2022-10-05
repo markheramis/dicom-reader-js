@@ -6,7 +6,6 @@ Dicom Reader JS is a small JS script that can accept a file parameter (specifica
 
 ```bash
 npm i dicom-reader-js
-npm link
 ```
 
 ### Usage

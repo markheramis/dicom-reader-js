@@ -1,6 +1,6 @@
 {
   "name": "dicom-reader-js",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "script.js",
   "license": "MIT",
   "homepage": "https://github.com/markheramis/dicom-reader-js#readme",
