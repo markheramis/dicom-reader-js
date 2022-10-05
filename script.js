@@ -1,4 +1,9 @@
+#!/usr/bin/env node
+
 "use strict";
+
+const [, , ...args] = process.argv
+
 var dicom = require("dicom")
 var decoder = dicom.decoder({
     guess_header: true
@@ -17,7 +22,7 @@ var sink = new dicom.json.JsonSink(function (err, json) {
     console.log(JSON.stringify(result))
 })
 require("fs")
-    .createReadStream(process.argv[2])
+    .createReadStream(args[0])
     .pipe(decoder)
     .pipe(encoder)
     .pipe(sink)

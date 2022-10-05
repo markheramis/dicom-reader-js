@@ -1,9 +1,12 @@
 {
   "name": "dicom-reader-js",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "script.js",
   "license": "MIT",
   "dependencies": {
     "dicom": "^0.4.4"
+  },
+  "bin": {
+    "dicom-reader" : "./script.js"
   }
 }
