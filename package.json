@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "script.js",
   "license": "MIT",
+  "homepage": "https://github.com/markheramis/dicom-reader-js#readme",
+  "repository": "https://github.com/markheramis/dicom-reader-js",
   "dependencies": {
     "dicom": "^0.4.4"
   },
