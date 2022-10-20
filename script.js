@@ -1,105 +1,45 @@
 #!/usr/bin/env node
 
 "use strict";
+const dwv = require('dwv');
 const fs = require('fs')
-const dicom = require("dicom");
-const { TransducerType } = require('dicom/lib/tags');
-
-
-
-class DicomReader {
-    file = undefined;
-    result = {}
-    decoder = dicom.decoder({
-        guess_header: TransducerType,
-        read_header: false
-    })
-    encoder = new dicom.json.JsonEncoder()
-    sink = new dicom.json.JsonSink((err, json) => {
-        if (err) {
-            process.exit(10);
-        }
-        for (const [key, value] of Object.entries(json)) {
-            let propertyName = dicom.tags.for_tag(key).name
-            this.result[propertyName] = value
-        }
-    })
-    constructor(file) {
-        this.file = file;
-    }
-    exists() {
-        return fs.existsSync(this.file);
-    }
-    read() {
-        return new Promise((resolve, reject) => {
-            let stream = fs.createReadStream(this.file)
-                .pipe(this.decoder)
-                .pipe(this.encoder)
-                .pipe(this.sink)
-            stream.on("finish", () => resolve(this.result));
-            /**
-             * @todo error handler
-             * error handling apparently not working if passed with non-dicom file.
-             * try catch isn't working as well.
-             */
-            stream.on("error", err => reject(err));
-        });
-    }
-}
+const dicomDataDictionary = require('dicom-data-dictionary');
+var result = [];
 if (require.main === module) {
     const [, , ...args] = process.argv;
     const file = args[0];
-    const dicomReader = new DicomReader(file);
-    if (dicomReader.exists()) {
-        dicomReader.read()
-            .then((data) => {
-                console.log(data)
-            })
-            .catch((error) => {
-                console.log(error)
-            })
-    } else {
-        module.exports = DicomReader
-    }
+    var data = fs.readFileSync(file);
+    // convert data to array buffer
+    var arrayBuffer = new Uint8Array(data).buffer;
+    // parse
+    var dicomParser = new dwv.dicom.DicomParser();
+    dicomParser.parse(arrayBuffer);
 
+    var tags = dicomParser.getDicomElements();
+    const excludedTag = [
+        "PixelData"
+    ]
+    const vrExcluded = [
+        "UV", "UN", "SQ"
+    ];
+    Object.entries(dicomDataDictionary.standardDataElements).forEach(tag => {
+        const [tagKey, tagValue] = tag;
+        var item = tags.getFromName(tagValue.name);
+        if (
+            !(item == null || item == undefined || item == "") &&
+            excludedTag.indexOf(tagValue.name) === -1 &&
+            vrExcluded.indexOf(tagValue.vr) === -1
+        ) {
+            result[tagKey] = {
+                vr: tagValue.vr,
+                tag: tagValue.name,
+                value: item
+            };
+
+        }
+    });
+    console.log(result)
+    
 } else {
     console.log('required as a module');
 }
-
-
-
-
-
-
-/*
-
-var decoder = dicom.decoder({
-    guess_header: true
-})
-
-
-try {
-
-} catch (err) {
-
-}
-let result = {}
-var encoder = new dicom.json.JsonEncoder()
-var sink = new dicom.json.JsonSink(function (err, json) {
-    if (err) {
-        console.log("Error:", err)
-        process.exit(10);
-    }
-    for (const [key, value] of Object.entries(json)) {
-        let propertyName = dicom.tags.for_tag(key).name
-        result[propertyName] = value
-    }
-    console.log(JSON.stringify(result))
-})
-
-require("fs")
-    .createReadStream(args[0])
-    .pipe(decoder)
-    .pipe(encoder)
-    .pipe(sink)
-*/

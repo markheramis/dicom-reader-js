@@ -1,14 +1,16 @@
 {
   "name": "dicom-reader-js",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "script.js",
   "license": "MIT",
   "homepage": "https://github.com/markheramis/dicom-reader-js#readme",
   "repository": "https://github.com/markheramis/dicom-reader-js",
   "dependencies": {
-    "dicom": "^0.4.4"
+    "canvas": "^2.10.1",
+    "dicom-data-dictionary": "^0.3.1",
+    "dwv": "^0.30.8"
   },
   "bin": {
-    "dicom-reader" : "./script.js"
+    "dicom-reader": "./script.js"
   }
 }
