@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 "use strict";
-const dwv = require('dwv');
 const fs = require('fs')
+const dicomParser = require('dicom-parser');
 const dicomDataDictionary = require('dicom-data-dictionary');
+const standardDataElements = dicomDataDictionary.standardDataElements;
 var result = [];
 if (require.main === module) {
     const [, , ...args] = process.argv;
@@ -14,40 +15,29 @@ if (require.main === module) {
             message: `File ${file} does not exists`
         })
     } else {
-        var data = fs.readFileSync(file);
-        // convert data to array buffer
-        var arrayBuffer = new Uint8Array(data).buffer;
-        // parse
-        var dicomParser = new dwv.dicom.DicomParser();
+        var dicomFileAsBuffer = fs.readFileSync(file);
         try {
-            dicomParser.parse(arrayBuffer);
-            var tags = dicomParser.getDicomElements();
-            const excludedTag = [
-                "PixelData"
-            ]
-            const vrExcluded = [
-                "UV", "UN", "SQ"
-            ];
-            Object.entries(dicomDataDictionary.standardDataElements).forEach(tag => {
-                const [tagKey, tagValue] = tag;
-                var item = tags.getFromName(tagValue.name);
-                if (
-                    !(item == null || item == undefined || item == "") &&
-                    excludedTag.indexOf(tagValue.name) === -1 &&
-                    vrExcluded.indexOf(tagValue.vr) === -1
-                ) {
-                    result[tagKey] = {
-                        vr: tagValue.vr,
-                        tag: tagValue.name,
-                        value: item
-                    };
+            var dataSet = dicomParser.parseDicom(dicomFileAsBuffer);
+            
+            var result = {};
+            var exclude = ['SQ']
+            Object.entries(dataSet.elements).forEach(function ([key, object]) {
+                const tagName = standardDataElements[key.substring(1)];
+                if (tagName != undefined && !exclude.includes(object.vr)) {
+                    result[tagName.name] = {
+                        tag: object.tag,
+                        vr: object.vr,
+                        length: object.length,
+                        value: dataSet.string(key)
+                    }
+                    
                 }
             });
-            console.log(result)
-        } catch (error) { 
+            console.log(JSON.stringify(result))
+        } catch (error) {
             console.error({
-                code: true,
-                message: error.message
+                error: true,
+                message: error
             })
         }
     }
